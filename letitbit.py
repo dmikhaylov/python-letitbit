@@ -291,3 +291,58 @@ class Letitbit(object):
         if response['status'] != 'OK':
             raise NotSuccessfulResponseException(response['status'])
         return bool(response['data'][0])
+
+    def get_user_aliases(self):
+        self.add_method('user', 'aliases')
+        response = self.run()
+        if response['status'] != 'OK':
+            raise NotSuccessfulResponseException(response['status'])
+        return bool(response['data'][0])
+
+    def get_user_aliases_login(self, project='letitbit.net'):
+        args = {
+            'project': project
+        }
+        self.add_method('user', 'aliases_login', args)
+        response = self.run()
+        if response['status'] != 'OK':
+            raise NotSuccessfulResponseException(response['status'])
+        return response['data'][0]
+
+    def get_user_info(self, login=None, passwd_hash=None, project='letitbit.net'):
+        if login and passwd_hash:
+            args = {
+                'login': login,
+                'pass': passwd_hash,
+                'project': project
+            }
+            self.add_method('user', 'info', args)
+        else:
+            self.add_method('user', 'info')
+        response = self.run()
+        if response['status'] != 'OK':
+            raise NotSuccessfulResponseException(response['status'])
+        return response['data'][0]
+
+    def register_user(self, login, passwd, project='letitbit.net'):
+        args = {
+            'login': login,
+            'pass': passwd,
+            'project': project
+        }
+        self.add_method('user', 'register', args)
+        response = self.run()
+        if response['status'] != 'OK':
+            raise NotSuccessfulResponseException(response['status'])
+        return response['data'][0]
+
+    def assume_user(self, login, passwd, project='letitbit.net'):
+        args = {
+            'login': login,
+            'pass': passwd,
+            'project': project
+        }
+        self.add_method('user', 'assume', args)
+        response = self.run()
+        if response['status'] != 'OK':
+            raise NotSuccessfulResponseException(response['status'])

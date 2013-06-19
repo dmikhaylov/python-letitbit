@@ -231,3 +231,63 @@ class Letitbit(object):
         if response['status'] != 'OK':
             raise NotSuccessfulResponseException(response['status'])
         return response['data'][0]
+
+    def get_filemanager_listing(self, limit=50, page=1, folder=0):
+        args = {
+            'limit': limit,
+            'page': page,
+            'folder': folder
+        }
+        self.add_method('filemanager', 'listing', args)
+        response = self.run()
+        if response['status'] != 'OK':
+            raise NotSuccessfulResponseException(response['status'])
+        return response['data'][0]
+
+    def get_filemanager_folders(self):
+        self.add_method('filemanager', 'folders')
+        response = self.run()
+        if response['status'] != 'OK':
+            raise NotSuccessfulResponseException(response['status'])
+        return response['data'][0]
+
+    def get_filemanager_aliases(self, files_info):
+        args = {
+            'files': files_info
+        }
+        self.add_method('filemanager', 'aliases', args)
+        response = self.run()
+        if response['status'] != 'OK':
+            raise NotSuccessfulResponseException(response['status'])
+        return response['data'][0]
+
+    def get_filemanager_vipaliases(self, files_info):
+        args = {
+            'files': files_info
+        }
+        self.add_method('filemanager', 'vipaliases', args)
+        response = self.run()
+        if response['status'] != 'OK':
+            raise NotSuccessfulResponseException(response['status'])
+        return response['data'][0]
+
+    def delete(self, files_uids):
+        args = {
+            'uids': files_uids
+        }
+        self.add_method('filemanager', 'delete', args)
+        response = self.run()
+        if response['status'] != 'OK':
+            raise NotSuccessfulResponseException(response['status'])
+        return response['data'][0]
+
+    def rename(self, file_uid, name):
+        args = {
+            'uid': file_uid,
+            'name': name
+        }
+        self.add_method('filemanager', 'rename', args)
+        response = self.run()
+        if response['status'] != 'OK':
+            raise NotSuccessfulResponseException(response['status'])
+        return bool(response['data'][0])

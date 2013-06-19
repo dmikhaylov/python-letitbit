@@ -201,3 +201,33 @@ class Letitbit(object):
         response = self.run()
         if response['status'] != 'OK':
             raise NotSuccessfulResponseException(response['status'])
+
+    def get_direct_links(self, link, passwd=None):
+        """Returns direct links to file"""
+        args = {
+            'link': link,
+            'pass': "" if not passwd else passwd
+        }
+        self.add_method('download', 'direct_links', args)
+        response = self.run()
+        return response['data'][0]
+
+    def check_link(self, link):
+        args = {
+            'link': link
+        }
+        self.add_method('download', 'check_link', args)
+        response = self.run()
+        if response['status'] != 'OK':
+            raise NotSuccessfulResponseException(response['status'])
+        return bool(response['data'][0])
+
+    def get_file_info(self, link):
+        args = {
+            'link': link
+        }
+        self.add_method('download', 'info', args)
+        response = self.run()
+        if response['status'] != 'OK':
+            raise NotSuccessfulResponseException(response['status'])
+        return response['data'][0]

@@ -192,3 +192,12 @@ class Letitbit(object):
                 print
             methods[c] = response['data'][0]
         return methods
+
+    def set_ftp_flag_auto(self, value=True):
+        args = {
+            'flag': int(value)
+        }
+        self.add_method('ftp', 'flag_auto', args)
+        response = self.run()
+        if response['status'] != 'OK':
+            raise NotSuccessfulResponseException(response['status'])

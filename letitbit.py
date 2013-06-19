@@ -80,6 +80,20 @@ class Letitbit(object):
         self.total_requests = key_data['total_requests']
         self.total_points = key_data['total_points']
 
+    def get_key_auth(self, login, passwd, project='letitbit.net'):
+        import hashlib
+        passwd_hash = hashlib.md5(hashlib.md5(passwd).hexdigest()).hexdigest()
+        args = {
+            'login': login,
+            'pass': passwd_hash,
+            'project': project
+        }
+        self.add_method('key', 'auth', args)
+        response = self.run()
+        if response['status'] != 'OK':
+            raise NotSuccessfulResponseException(response['status'])
+        return response['data'][0]
+
     def get_servers_list(self, protocol):
         if protocol not in Letitbit.protocols:
             raise UnknownProtocolException(protocol)

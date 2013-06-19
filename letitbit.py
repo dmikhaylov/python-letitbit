@@ -50,9 +50,6 @@ class Letitbit(object):
         for p in Letitbit.protocols:
             self.servers[p] = list()
 
-        self._get_auth_data(self.protocol)
-        self.get_servers_list(self.protocol)
-
     def add_method(self, controller, method, parameters=None):
         meth = list()
         meth.append("{}/{}".format(controller, method))
@@ -147,3 +144,37 @@ class Letitbit(object):
         self.login = auth_data['login']
         self.password = auth_data['pass']
 
+    def list_controllers(self, output=False):
+        self.add_method('list', 'controllers')
+        response = self.run()
+        if response['status'] != 'OK':
+            raise NotSuccessfulResponseException(response['status'])
+        if output:
+            for c in response['data'][0]:
+                print(c)
+        return response['data'][0]
+
+    def list_methods(self, controller=None, output=False):
+        controllers = [controller]
+        methods = dict()
+        if not controller:
+            controllers = self.list_controllers()
+        for c in controllers:
+            args = {'controller': c}
+            self.add_method('list', 'methods', args)
+            response = self.run()
+            if response['status'] != 'OK':
+                raise NotSuccessfulResponseException(response['status'])
+            if output:
+                if len(controllers) > 1:
+                    print(c)
+                for k, v in response['data'][0].items():
+                    print ('\t' + k)
+                    print("\t\tDescription: {}\n\t\tCost: {}\n\t\tCall: {}\n".format(
+                        v.get('descr', str(None)).encode('utf-8'),
+                        v.get('cost', 0),
+                        v.get('call', "").encode('utf-8')).replace('\\', '')
+                    )
+                print
+            methods[c] = response['data'][0]
+        return methods

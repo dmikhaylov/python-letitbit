@@ -346,3 +346,23 @@ class Letitbit(object):
         response = self.run()
         if response['status'] != 'OK':
             raise NotSuccessfulResponseException(response['status'])
+
+    def get_skymonk_link(self, uid):
+        args = {
+            'uid': uid
+        }
+        self.add_method('preview', 'skymonk_link', args)
+        response = self.run()
+        if response['status'] != 'OK':
+            raise NotSuccessfulResponseException(response['status'])
+        return response['data'][0]
+
+    def get_flv_image(self, uid):
+        args = {
+            'uid': uid
+        }
+        self.add_method('preview', 'flv_image', args)
+        response = self.run()
+        if response['status'] != 'OK':
+            raise NotSuccessfulResponseException(response['status'])
+        return response['data'][0]

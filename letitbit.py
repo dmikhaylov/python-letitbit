@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*
+"""
+Simple module for accessing letitbit.net filesharing services.
+Unfortunately not all methods from api implemented for now because they are not described good enough
+Just use Letitbit class to upload your files and do other stuff.
+"""
 import json
 import httplib, urllib
 from ftplib import FTP
@@ -6,6 +11,7 @@ import os
 
 
 class Error(Exception):
+    """Base exception class for all other exceptions in module"""
     def __init__(self, value, msg=None):
         Exception.__init__(self)
         self.value = value
@@ -16,12 +22,14 @@ class Error(Exception):
 
 
 class UnknownProtocolException(Error):
+    """When not right protocol used in arguments list"""
     def __init__(self, value, msg=None):
         Error.__init__(self, value, msg)
         self.msg = msg if msg else "Unknown Protocol: \"{}\"".format(self.value)
 
 
 class NotSuccessfulResponseException(Error):
+    """When response status from server is not 'OK'"""
     def __init__(self, value, msg=None):
         Error.__init__(self, value, msg)
         self.msg = msg if msg else "Not Successful Response came from server: \"{}\"".format(self.value)
@@ -36,7 +44,7 @@ def empty(inList):
 class Letitbit(object):
     """Class to access to Letitbit.net file sharing services"""
 
-    protocols = ('ftp', 'http',)
+    protocols = ('ftp', 'http',)  # list of protocols which can be used for files uploading
 
     def __init__(self, key, protocol='ftp'):
         self.key = key
@@ -51,6 +59,7 @@ class Letitbit(object):
             self.servers[p] = list()
 
     def add_method(self, controller, method, parameters=None):
+        """Creates dictionary that will be converted to JSON representation"""
         meth = list()
         meth.append("{}/{}".format(controller, method))
         if parameters:
@@ -58,6 +67,7 @@ class Letitbit(object):
         self.data.append(meth)
 
     def run(self):
+        """Creates JSON to request data from server"""
         params = urllib.urlencode({'r': json.dumps(self.data)})
         response = None
         try:
@@ -70,6 +80,7 @@ class Letitbit(object):
         return response
 
     def check_key_info(self):
+        """Checks statistics for current user's key"""
         self.add_method('key', 'info')
         result = self.run()
         if result['status'] != 'OK':
@@ -81,6 +92,7 @@ class Letitbit(object):
         self.total_points = key_data['total_points']
 
     def get_key_auth(self, login, passwd, project='letitbit.net'):
+        """Returns key that is needed to access several projects like sms4file and others"""
         import hashlib
         passwd_hash = hashlib.md5(hashlib.md5(passwd).hexdigest()).hexdigest()
         args = {
@@ -95,6 +107,7 @@ class Letitbit(object):
         return response['data'][0]
 
     def get_servers_list(self, protocol):
+        """Gets servers list for chosen protocol and saves them in object's servers attribute"""
         if protocol not in Letitbit.protocols:
             raise UnknownProtocolException(protocol)
         self.add_method(protocol, 'listing')
@@ -118,6 +131,7 @@ class Letitbit(object):
         file.close()
 
     def process(self, protocol, server, filename):
+        """Returns links list for uploaded file"""
         args = {
             'server': server,
             'tmpname': filename,
@@ -147,6 +161,7 @@ class Letitbit(object):
         return response['data'][0][0]['link'], response['data'][0][0]['uid']
 
     def _get_auth_data(self, protocol):
+        """Gets authentication information for ftp and saves it in object's attributes login and password"""
         if protocol not in Letitbit.protocols:
             raise UnknownProtocolException(protocol)
         self.add_method(protocol, 'auth_data')
@@ -159,6 +174,7 @@ class Letitbit(object):
         self.password = auth_data['pass']
 
     def list_controllers(self, output=False):
+        """Returns list of available controllers"""
         self.add_method('list', 'controllers')
         response = self.run()
         if response['status'] != 'OK':
@@ -169,6 +185,7 @@ class Letitbit(object):
         return response['data'][0]
 
     def list_methods(self, controller=None, output=False):
+        """Returns methods list in chosen controller. If there is nothing in controller attribute then it returns info about all controllers. If output is True - prints out all info."""
         controllers = [controller]
         methods = dict()
         if not controller:
@@ -213,6 +230,7 @@ class Letitbit(object):
         return response['data'][0]
 
     def check_link(self, link):
+        """Returns True if file is on one or more servers and False otherwise"""
         args = {
             'link': link
         }
@@ -223,6 +241,7 @@ class Letitbit(object):
         return bool(response['data'][0])
 
     def get_file_info(self, link):
+        """Returns dictionary which contains some info about file like file size, uid and etc."""
         args = {
             'link': link
         }
@@ -233,6 +252,7 @@ class Letitbit(object):
         return response['data'][0]
 
     def get_filemanager_listing(self, limit=50, page=1, folder=0):
+        """Returns list of dictionaries containing various info about all files which you chose with function parameters"""
         args = {
             'limit': limit,
             'page': page,
@@ -245,6 +265,7 @@ class Letitbit(object):
         return response['data'][0]
 
     def get_filemanager_folders(self):
+        """Returns list of folders existing in file manager"""
         self.add_method('filemanager', 'folders')
         response = self.run()
         if response['status'] != 'OK':
@@ -252,6 +273,7 @@ class Letitbit(object):
         return response['data'][0]
 
     def get_filemanager_aliases(self, files_info):
+        """Returns uids of files aliases in other projects. files_info should be dictionary where key is file's md5 hash string and value is it's size"""
         args = {
             'files': files_info
         }
@@ -262,6 +284,7 @@ class Letitbit(object):
         return response['data'][0]
 
     def get_filemanager_vipaliases(self, files_info):
+        """Returns list of aliases for vip-file.com"""
         args = {
             'files': files_info
         }
@@ -272,6 +295,7 @@ class Letitbit(object):
         return response['data'][0]
 
     def delete(self, files_uids):
+        """Removes files which uids are in files_uids from hosts. Returns amount of removed files"""
         args = {
             'uids': files_uids
         }
@@ -282,6 +306,7 @@ class Letitbit(object):
         return response['data'][0]
 
     def rename(self, file_uid, name):
+        """Renames file"""
         args = {
             'uid': file_uid,
             'name': name
@@ -293,6 +318,7 @@ class Letitbit(object):
         return bool(response['data'][0])
 
     def get_user_aliases(self):
+        """Returns dictionary with current user's ID in all projects (letitbit, vip-file, etc)"""
         self.add_method('user', 'aliases')
         response = self.run()
         if response['status'] != 'OK':
@@ -300,6 +326,7 @@ class Letitbit(object):
         return bool(response['data'][0])
 
     def get_user_aliases_login(self, project='letitbit.net'):
+        """Returns user's login for chosen project"""
         args = {
             'project': project
         }
@@ -337,6 +364,7 @@ class Letitbit(object):
         return response['data'][0]
 
     def assume_user(self, login, passwd, project='letitbit.net'):
+        """Allows you to change current user"""
         args = {
             'login': login,
             'pass': passwd,
@@ -348,6 +376,7 @@ class Letitbit(object):
             raise NotSuccessfulResponseException(response['status'])
 
     def get_skymonk_link(self, uid):
+        """Returns skymonk installation file link for chosen file"""
         args = {
             'uid': uid
         }
@@ -358,6 +387,7 @@ class Letitbit(object):
         return response['data'][0]
 
     def get_flv_image(self, uid):
+        """Returns flv video images link for chosen file"""
         args = {
             'uid': uid
         }

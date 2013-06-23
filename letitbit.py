@@ -396,3 +396,9 @@ class Letitbit(object):
         if response['status'] != 'OK':
             raise NotSuccessfulResponseException(response['status'])
         return response['data'][0]
+
+    def get_flv_paste_code(self, link, width=600, height=450):
+        file_info = self.get_file_info()
+        uid = file_info['uid']
+        paste_code = "<script language=\"JavaScript\" type=\"text/javascript\" src=\"http://moevideo.net/video.php?file={}&width={}&height={}\"></script>".format(uid, width, height)
+        return paste_code

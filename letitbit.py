@@ -5,7 +5,7 @@ Unfortunately not all methods from api implemented for now because they are not 
 Just use Letitbit class to upload your files and do other stuff.
 """
 import json
-import httplib, urllib
+import httplib, urllib, urllib2, cookielib
 from ftplib import FTP
 import os
 
@@ -398,7 +398,23 @@ class Letitbit(object):
         return response['data'][0]
 
     def get_flv_paste_code(self, link, width=600, height=450):
+        """Returns html code which you can paste in your pages"""
         file_info = self.get_file_info()
         uid = file_info['uid']
         paste_code = "<script language=\"JavaScript\" type=\"text/javascript\" src=\"http://moevideo.net/video.php?file={}&width={}&height={}\"></script>".format(uid, width, height)
         return paste_code
+
+    def convert_videos(self, files_uids, login, password):
+        cj = cookielib.CookieJar()
+        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
+        login_data = urllib.urlencode({'log': login, 'pas': password, 'inout': ""})
+
+        # try to login twice, first time you will just get cookies
+        opener.open('http://lib.wm-panel.com/wm-panel/user/signin-do', login_data)
+        opener.open('http://lib.wm-panel.com/wm-panel/user/signin-do', login_data)
+
+        msg = dict()
+        msg['path'] = 'ROOT/HOME/letitbit.net'
+        msg['fileuids[]'] = files_uids
+        convert_data = urllib.urlencode(msg, True)
+        opener.open('http://lib.wm-panel.com/wm-panel/File-Manager-Ajax?module=fileman_myfiles&section=ajax&page=grid_action_convert', convert_data)
